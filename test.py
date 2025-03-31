@@ -15,6 +15,76 @@ This tool generates optimal timetables considering:
 - Classroom constraints
 - Subject requirements
 """)
+def validate_json_data(data, periods_per_day):
+    errors = []
+    total_slots = 5 * periods_per_day  # 5 days per week
+    
+    # Check for required keys
+    for key in ["classes", "subjects", "teachers"]:
+        if key not in data:
+            errors.append(f"Missing key: '{key}' in JSON data.")
+
+    # Validate 'subjects'
+    subjects_defined = {}
+    if "subjects" in data:
+        if not isinstance(data["subjects"], list) or not data["subjects"]:
+            errors.append("The 'subjects' key must be a non-empty list.")
+        else:
+            for s in data["subjects"]:
+                if "Subject" not in s:
+                    errors.append("Each subject entry must have a 'Subject' field.")
+                if "Periods" not in s or not isinstance(s["Periods"], int):
+                    errors.append(f"Subject {s.get('Subject', '<unknown>')} must have an integer 'Periods' field.")
+                else:
+                    # Save subject details for later validations
+                    subjects_defined[s["Subject"]] = s["Periods"]
+                    # Check if the subject's periods exceed available slots for one class
+                    if s["Periods"] > total_slots:
+                        errors.append(f"Subject '{s.get('Subject', '<unknown>')}' requires {s['Periods']} periods, which exceeds the total available slots ({total_slots}).")
+
+    # Validate 'teachers'
+    if "teachers" in data:
+        if not isinstance(data["teachers"], list) or not data["teachers"]:
+            errors.append("The 'teachers' key must be a non-empty list.")
+        else:
+            for t in data["teachers"]:
+                if "Teacher" not in t:
+                    errors.append("Each teacher entry must have a 'Teacher' field.")
+                if "Subject" not in t:
+                    errors.append("Each teacher entry must have a 'Subject' field.")
+                else:
+                    subject = t["Subject"]
+                    # Check that the subject exists in the defined subjects
+                    if subject not in subjects_defined:
+                        errors.append(f"Teacher '{t.get('Teacher', '<unknown>')}' is assigned to subject '{subject}', which is not defined in subjects list.")
+
+    # Validate 'classes'
+    if "classes" in data:
+        if not isinstance(data["classes"], list) or not data["classes"]:
+            errors.append("The 'classes' key must be a non-empty list.")
+        else:
+            for c in data["classes"]:
+                if "class" not in c:
+                    errors.append("Each class entry must have a 'class' field.")
+                if "subjects" not in c or not isinstance(c["subjects"], list) or not c["subjects"]:
+                    errors.append(f"Class '{c.get('class', '<unknown>')}' must have a non-empty list of 'subjects'.")
+                else:
+                    class_total_periods = 0
+                    for subject in c["subjects"]:
+                        # Check that each subject in a class is defined
+                        if subject not in subjects_defined:
+                            errors.append(f"Subject '{subject}' in class '{c.get('class', '<unknown>')}' is not defined in the subjects list.")
+                        else:
+                            class_total_periods += subjects_defined[subject]
+                    # Check if total required periods for the class exceed available slots
+                    if class_total_periods > total_slots:
+                        errors.append(
+                            f"Total periods required for class '{c.get('class', '<unknown>')}' is {class_total_periods}, "
+                            f"which exceeds available slots ({total_slots})."
+                        )
+
+    return errors
+
 
 def solve_timetable(data, periods_per_day=8):
     DAYS = 5  # Monday to Friday
@@ -62,6 +132,15 @@ def solve_timetable(data, periods_per_day=8):
         
         for s in range(SLOTS):
             model.AddAtMostOne(schedule[class_name][subject][s] for subject in c["subjects"])
+
+        # NEW: Prevent 3 consecutive periods of the same subject
+        for s in range(SLOTS - 2):
+            for subject in c["subjects"]:
+                model.AddAtMostOne([
+                    schedule[class_name][subject][s],
+                    schedule[class_name][subject][s + 1],
+                    schedule[class_name][subject][s + 2]
+                ])
 
     # Teacher conflicts
     teacher_subjects = defaultdict(list)
@@ -176,16 +255,22 @@ with st.sidebar:
     if uploaded_file:
         try:
             data = json.load(uploaded_file)
-            if st.button("Generate Timetable"):
-                with st.spinner("Generating optimal timetable..."):
-                    result = solve_timetable(data, periods_per_day=periods_per_day)
-                    st.session_state.timetable_data = result
-                    if result["status"] == "success":
-                        st.success("Timetable generated!")
-                    else:
-                        st.error(result["message"])
+            validation_errors = validate_json_data(data, periods_per_day)
+            if validation_errors:
+                for error in validation_errors:
+                    st.error(error)
+            else:
+                if st.button("Generate Timetable"):
+                    with st.spinner("Generating optimal timetable..."):
+                        result = solve_timetable(data, periods_per_day=periods_per_day)
+                        st.session_state.timetable_data = result
+                        if result["status"] == "success":
+                            st.success("Timetable generated!")
+                        else:
+                            st.error(result["message"])
         except Exception as e:
             st.error(f"Error loading file: {str(e)}")
+
 
 # Display results
 if st.session_state.timetable_data and st.session_state.timetable_data["status"] == "success":

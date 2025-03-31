@@ -1,0 +1,216 @@
+{
+  "classes": [
+    {
+      "class": "Grade 10A",
+      "subjects": [
+        "Science",
+        "History",
+        "Art",
+        "Math",
+        "English"
+      ]
+    },
+    {
+      "class": "Grade 10B",
+      "subjects": [
+        "Math",
+        "History"
+      ]
+    },
+    {
+      "class": "Grade 10C",
+      "subjects": [
+        "Math",
+        "History",
+        "Science"
+      ]
+    },
+    {
+      "class": "Grade 10D",
+      "subjects": [
+        "Science",
+        "English",
+        "Art"
+      ]
+    },
+    {
+      "class": "Grade 10E",
+      "subjects": [
+        "Art",
+        "English",
+        "Math",
+        "Science"
+      ]
+    },
+    {
+      "class": "Grade 10F",
+      "subjects": [
+        "Art",
+        "Science",
+        "History",
+        "English",
+        "Math"
+      ]
+    },
+    {
+      "class": "Grade 10G",
+      "subjects": [
+        "English",
+        "Science",
+        "Art"
+      ]
+    },
+    {
+      "class": "Grade 10H",
+      "subjects": [
+        "Science",
+        "Art",
+        "History"
+      ]
+    },
+    {
+      "class": "Grade 10I",
+      "subjects": [
+        "Science",
+        "History",
+        "English",
+        "Art"
+      ]
+    },
+    {
+      "class": "Grade 10J",
+      "subjects": [
+        "English",
+        "Art"
+      ]
+    },
+    {
+      "class": "Grade 10K",
+      "subjects": [
+        "Art",
+        "Math",
+        "English",
+        "Science"
+      ]
+    },
+    {
+      "class": "Grade 10L",
+      "subjects": [
+        "Science",
+        "Math",
+        "Art",
+        "History",
+        "English"
+      ]
+    },
+    {
+      "class": "Grade 10M",
+      "subjects": [
+        "Science",
+        "Math",
+        "Art",
+        "English",
+        "History"
+      ]
+    },
+    {
+      "class": "Grade 10N",
+      "subjects": [
+        "English",
+        "Art",
+        "History",
+        "Math"
+      ]
+    },
+    {
+      "class": "Grade 10O",
+      "subjects": [
+        "Math",
+        "Art"
+      ]
+    },
+    {
+      "class": "Grade 10P",
+      "subjects": [
+        "Art",
+        "Science",
+        "History",
+        "UndefinedSubject"
+      ]
+    },
+    {
+      "class": "Grade 10Q",
+      "subjects": [
+        "Science",
+        "Art",
+        "History",
+        "English"
+      ]
+    },
+    {
+      "class": "Grade 10R",
+      "subjects": [
+        "Math",
+        "Science"
+      ]
+    },
+    {
+      "class": "Grade 10S",
+      "subjects": [
+        "Art",
+        "English",
+        "History",
+        "Science",
+        "Math"
+      ]
+    },
+    {
+      "class": "Grade 10T",
+      "subjects": [
+        "Art",
+        "Science",
+        "History",
+        "English"
+      ]
+    },
+    {
+      "class": "Grade 10U",
+      "subjects": [
+        "Science",
+        "Art"
+      ]
+    },
+    {
+      "class": "Grade 10V",
+      "subjects": [
+        "Math",
+        "English",
+        "Science",
+        "Art",
+        "History"
+      ]
+    }
+  ],
+  "subjects": [
+    {
+      "Subject": "Math",
+      "Periods": 5
+    },
+    {
+      "Subject": "English",
+      "Periods": 4
+    },
+    {
+      "Subject": "Science",
+      "Periods": 4
+    },
+    {
+      "Subject": "History",
+      "Periods": 3
+    },
+    {
+      "Subject": "Art",
+      "Periods": 2
+    }
+  ]
+}
