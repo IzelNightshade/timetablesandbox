@@ -4,6 +4,41 @@ import pandas as pd
 from ortools.sat.python import cp_model
 from collections import defaultdict
 
+# Import the conversion function from the first script
+def convert_csv_to_json(classes_file, subjects_file, teachers_file, output_file):
+    # Load CSV files
+    classes_df = pd.read_csv(classes_file)
+    subjects_df = pd.read_csv(subjects_file)
+    teachers_df = pd.read_csv(teachers_file)
+    
+    # Convert classes data
+    classes_data = []
+    for _, row in classes_df.iterrows():
+        class_entry = {
+            "class": row["Class"],
+            "subjects": row["Subjects"].split("; ")  # Split semicolon-separated subjects
+        }
+        classes_data.append(class_entry)
+    
+    # Convert subjects data
+    subjects_data = subjects_df.to_dict(orient="records")
+    
+    # Convert teachers data
+    teachers_data = teachers_df.to_dict(orient="records")
+    
+    # Structure everything into a JSON format
+    timetable_data = {
+        "classes": classes_data,
+        "subjects": subjects_data,
+        "teachers": teachers_data
+    }
+    
+    # Save to JSON file
+    with open(output_file, "w") as json_file:
+        json.dump(timetable_data, json_file, indent=4)
+    
+    print(f"JSON file saved as {output_file}")
+
 # Set page config
 st.set_page_config(page_title="Timetable Generator", layout="wide")
 
@@ -15,6 +50,7 @@ This tool generates optimal timetables considering:
 - Classroom constraints
 - Subject requirements
 """)
+
 def validate_json_data(data, periods_per_day):
     errors = []
     total_slots = 5 * periods_per_day  # 5 days per week
@@ -250,11 +286,38 @@ if 'timetable_data' not in st.session_state:
 with st.sidebar:
     st.header("Configuration")
     periods_per_day = st.number_input("Periods per day", min_value=1, max_value=12, value=8, help="Number of periods in each school day")
-    uploaded_file = st.file_uploader("Upload JSON Data", type=["json"])
     
-    if uploaded_file:
+    # File uploaders for CSV files
+    st.subheader("Upload CSV Files")
+    classes_file = st.file_uploader("Classes CSV", type=["csv"])
+    subjects_file = st.file_uploader("Subjects CSV", type=["csv"])
+    teachers_file = st.file_uploader("Teachers CSV", type=["csv"])
+    
+    if classes_file and subjects_file and teachers_file:
         try:
-            data = json.load(uploaded_file)
+            # Convert CSVs to JSON in memory
+            classes_df = pd.read_csv(classes_file)
+            subjects_df = pd.read_csv(subjects_file)
+            teachers_df = pd.read_csv(teachers_file)
+            
+            # Convert to JSON format (same as the first script)
+            classes_data = []
+            for _, row in classes_df.iterrows():
+                class_entry = {
+                    "class": row["Class"],
+                    "subjects": row["Subjects"].split("; ")  # Split semicolon-separated subjects
+                }
+                classes_data.append(class_entry)
+            
+            subjects_data = subjects_df.to_dict(orient="records")
+            teachers_data = teachers_df.to_dict(orient="records")
+            
+            data = {
+                "classes": classes_data,
+                "subjects": subjects_data,
+                "teachers": teachers_data
+            }
+            
             validation_errors = validate_json_data(data, periods_per_day)
             if validation_errors:
                 for error in validation_errors:
@@ -269,10 +332,9 @@ with st.sidebar:
                         else:
                             st.error(result["message"])
         except Exception as e:
-            st.error(f"Error loading file: {str(e)}")
+            st.error(f"Error processing files: {str(e)}")
 
-
-# Display results
+# Display results (unchanged from original)
 if st.session_state.timetable_data and st.session_state.timetable_data["status"] == "success":
     result = st.session_state.timetable_data
     
@@ -339,29 +401,56 @@ elif st.session_state.timetable_data and st.session_state.timetable_data["status
     st.error("❌ Failed to generate timetable. Please check your constraints.")
 
 # Sample data
+# Sample data
+classes_data = [
+    {"Class": "Grade 10A", "Subjects": "Math;English;Science"},
+    {"Class": "Grade 10B", "Subjects": "Math;History;Art"}
+]
+
+subjects_data = [
+    {"Subject": "Math", "Periods": 5},
+    {"Subject": "English", "Periods": 4},
+    {"Subject": "Science", "Periods": 4},
+    {"Subject": "History", "Periods": 3},
+    {"Subject": "Art", "Periods": 2}
+]
+
+teachers_data = [
+    {"Teacher": "Mr. Smith", "Subject": "Math"},
+    {"Teacher": "Ms. Johnson", "Subject": "English"},
+    {"Teacher": "Dr. Brown", "Subject": "Science"},
+    {"Teacher": "Prof. Lee", "Subject": "History"},
+    {"Teacher": "Mrs. Davis", "Subject": "Art"}
+]
+
+# Convert to DataFrames
+df_classes = pd.DataFrame(classes_data)
+df_subjects = pd.DataFrame(subjects_data)
+df_teachers = pd.DataFrame(teachers_data)
+
+# Convert DataFrames to CSV (in-memory)
+classes_csv = df_classes.to_csv(index=False).encode("utf-8")
+subjects_csv = df_subjects.to_csv(index=False).encode("utf-8")
+teachers_csv = df_teachers.to_csv(index=False).encode("utf-8")
+
 with st.expander("Need sample data?"):
     st.download_button(
-        label="Download Sample JSON",
-        data=json.dumps({
-            "classes": [
-                {"class": "Grade 10A", "subjects": ["Math", "English", "Science"]},
-                {"class": "Grade 10B", "subjects": ["Math", "History", "Art"]}
-            ],
-            "subjects": [
-                {"Subject": "Math", "Periods": 5},
-                {"Subject": "English", "Periods": 4},
-                {"Subject": "Science", "Periods": 4},
-                {"Subject": "History", "Periods": 3},
-                {"Subject": "Art", "Periods": 2}
-            ],
-            "teachers": [
-                {"Teacher": "Mr. Smith", "Subject": "Math"},
-                {"Teacher": "Ms. Johnson", "Subject": "English"},
-                {"Teacher": "Dr. Brown", "Subject": "Science"},
-                {"Teacher": "Prof. Lee", "Subject": "History"},
-                {"Teacher": "Mrs. Davis", "Subject": "Art"}
-            ]
-        }, indent=2),
-        file_name="sample_timetable_data.json",
-        mime="application/json"
+        label="Download Sample Classes CSV",
+        data=classes_csv,
+        file_name="sample_classes.csv",
+        mime="text/csv"
+    )
+    
+    st.download_button(
+        label="Download Sample Subjects CSV",
+        data=subjects_csv,
+        file_name="sample_subjects.csv",
+        mime="text/csv"
+    )
+
+    st.download_button(
+        label="Download Sample Teachers CSV",
+        data=teachers_csv,
+        file_name="sample_teachers.csv",
+        mime="text/csv"
     )
